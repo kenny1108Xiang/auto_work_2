@@ -33,7 +33,8 @@ DAY_NAMES = ['', '星期一', '星期二', '星期三', '星期四', '星期五'
 
 def read_config_file(file_path="data.txt"):
     """
-    讀取設定檔並解析內容。
+    讀取並解析 data.txt 設定檔。
+    返回包含姓名、請假星期、原因的字典，失敗則返回 None。
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -107,7 +108,8 @@ def read_config_file(file_path="data.txt"):
 
 def validate_config(config):
     """
-    驗證設定檔內容，特別是原因字數。
+    驗證設定內容是否符合要求。
+    檢查星期六/日的原因是否填寫且字數 ≥ 15 字（不含空白）。
     """
     days = config['days']
     reason_sat = config['reason_sat']
@@ -158,7 +160,7 @@ def validate_config(config):
 
 def display_config(config):
     """
-    顯示設定檔內容給使用者確認。
+    在終端機顯示設定內容供使用者確認。
     """
     print("\n" + "=" * 60)
     print("讀取到的設定內容")
@@ -185,8 +187,8 @@ def display_config(config):
 
 def prepare_submission_data(day_number, mode, name, reason=None, leave_option="休假"):
     """
-    預處理單一表單的提交資料，但不實際提交。
-    返回一個包含所有提交所需資訊的字典，如果準備失敗則返回 None。
+    預處理單一表單的提交資料（解析 URL、取得 fbzx token、欄位 ID、組合 payload）。
+    成功返回包含提交資訊的字典，失敗則返回 None。
     """
     day_name = DAY_NAMES[day_number]
     logging.info(f"[{day_name}] 開始預先準備提交資料...")
@@ -223,7 +225,7 @@ def prepare_submission_data(day_number, mode, name, reason=None, leave_option="�
         user_data[reason_entry] = reason
     payload.update(user_data)
 
-    logging.info(f"[{day_name}] ✅ 資料準備完成。")
+    logging.info(f"[{day_name}] 資料準備完成。")
 
     # 成功時返回
     return {
@@ -238,8 +240,8 @@ def prepare_submission_data(day_number, mode, name, reason=None, leave_option="�
 
 def execute_submission(submission_data):
     """
-    執行單一已準備好的表單提交任務。
-    (已驗證：這是最穩健的方法，透過檢查回應頁面中的特定文字)
+    執行單一表單的提交並驗證結果。
+    檢查回應內容是否包含成功訊息，返回 (day_number, 成功布林值)。
     """
     day_name = submission_data["day_name"]
     logging.info(f"[{day_name}] 正在提交...")
@@ -283,7 +285,8 @@ def execute_submission(submission_data):
 
 def wait_for_scheduled_time():
     """
-    計算並等待直到下一個星期三的 13:59:59.500。
+    計算並等待直到下一個星期三 13:59:59.750。
+    使用三階段精度控制（1s → 0.1s → 0.01s → 精確等待）確保準時執行。
     """
     now = datetime.now()
     # 星期三的 weekday() 是 2 (星期一為0)
