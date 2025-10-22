@@ -14,8 +14,6 @@ from mail.send_mail import send_summary_email
 class PreparationException(Exception):
     pass
 
-# --- 以下的程式碼保持不變，直到 submit_form 函式 ---
-
 # 設定 logging
 logging.basicConfig(
     level=logging.INFO, 
@@ -183,7 +181,6 @@ def display_config(config):
     
     print("=" * 60)
 
-# --- 函式修改與新增 ---
 
 def prepare_submission_data(day_number, mode, name, reason=None, leave_option="休假"):
     """
@@ -343,7 +340,6 @@ def wait_for_scheduled_time():
         sys.exit(0)
 
 
-# --- 主程式修改 ---
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("Google 表單自動填寫工具 (多執行緒/排程版)")
